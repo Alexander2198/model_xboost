@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  train_model:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.train
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./encoders:/app/encoders
+    command: ["python", "scripts/train_xgboost.py"]
+
+  web_api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "5000:5000"
+    depends_on:
+      - train_model

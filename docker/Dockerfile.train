@@ -1,0 +1,17 @@
+# Imagen base
+FROM python:3.9
+
+# Directorio de trabajo
+WORKDIR /app
+
+# Copiar archivos necesarios
+COPY docker/requirements.txt .  
+COPY data/ data/
+COPY encoders/ encoders/
+COPY scripts/ scripts/
+
+# Instalar dependencias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Ejecutar el script de entrenamiento
+CMD ["python", "scripts/train_xgboost.py"]

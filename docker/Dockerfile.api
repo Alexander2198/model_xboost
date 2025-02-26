@@ -1,0 +1,21 @@
+# Imagen base
+FROM python:3.9
+
+# Directorio de trabajo
+WORKDIR /app
+
+# Copiar archivos necesarios
+COPY docker/requirements.txt .  
+COPY web_app/ web_app/
+COPY models/ models/
+COPY encoders/ encoders/
+COPY data/ data/
+
+# Instalar dependencias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Exponer puerto para la API
+EXPOSE 5000
+
+# Ejecutar la API Flask
+CMD ["python", "web_app/app.py"]

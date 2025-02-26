@@ -1,0 +1,281 @@
+<!doctype html>
+<html>
+<head>
+    <title>Predicción de Precio de Carros</title>
+    <!-- Incluir jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Incluir Select2 CSS y JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <style>
+        
+        body {
+            background-color: #ffd9a5;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        #header, #footer {
+            background-color: #000e79;
+            padding: 20px;
+            text-align: center;
+            color: aliceblue;
+            text-decoration: solid;
+        }
+        #content {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin: 20px;
+            flex-wrap: wrap;
+        }
+        #form-container, #result-container {
+            background: #ffead4;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 500px;
+        }
+        .form-columns {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .form-column {
+            width: 48%;
+        }
+        .field {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #f39c12;
+            color: rgb(0, 0, 0);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e67e22;
+        }
+        #predicted-auto-table {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #predicted-auto-table th, #predicted-auto-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        #predicted-auto-table th {
+            background-color: #f8c471;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+         <h1>EcuAutoPredictor: Predicción de Precio de Carros</h1>
+    </div>
+    
+        
+        <!-- Contenido: dos columnas -->
+        <div id="content">
+             <!-- Columna izquierda: Formulario -->
+             <div id="form-container">
+                 <div class="form-wrapper">
+                     <form id="auto-form" method="POST">
+                          <div class="form-columns">
+                              <!-- Primera columna -->
+                              <div class="form-column">
+                                  <div class="field">
+                                      <label for="Marca">Marca:</label>
+                                      <select name="Marca" id="Marca" class="select2">
+                                          {% for option in dropdown_options['Marca'] %}
+                                              <option value="{{ option }}"
+                                                  {% if form_data and form_data['Marca'] == option %}selected{% endif %}>
+                                                  {{ option }}
+                                              </option>
+                                          {% endfor %}
+                                      </select>
+                                  </div>
+                                  <div class="field">
+                                      <label for="Modelo">Modelo:</label>
+                                      <select name="Modelo" id="Modelo" class="select2">
+                                          {% for option in dropdown_options['Modelo'] %}
+                                              <option value="{{ option }}"
+                                                  {% if form_data and form_data['Modelo'] == option %}selected{% endif %}>
+                                                  {{ option }}
+                                              </option>
+                                          {% endfor %}
+                                      </select>
+                                  </div>
+                                  <div class="field">
+                                      <label for="Provincia">Provincia:</label>
+                                      <select name="Provincia" id="Provincia" class="select2">
+                                          {% for option in dropdown_options['Provincia'] %}
+                                              <option value="{{ option }}"
+                                                  {% if form_data and form_data['Provincia'] == option %}selected{% endif %}>
+                                                  {{ option }}
+                                              </option>
+                                          {% endfor %}
+                                      </select>
+                                  </div>
+                                  <div class="field">
+                                      <label for="Año">Año:</label>
+                                      <input type="number" name="Año" id="Año" value="{{ form_data['Año'] if form_data and form_data['Año'] is defined else '' }}">
+                                  </div>
+                                  <div class="field">
+                                      <label for="Kilometraje">Kilometraje:</label>
+                                      <input type="number" name="Kilometraje" id="Kilometraje" value="{{ form_data['Kilometraje'] if form_data and form_data['Kilometraje'] is defined else '' }}">
+                                  </div>
+                              </div>
+                              <!-- Segunda columna -->
+                              <div class="form-column">
+                                  <div class="field">
+                                      <label for="Transmisión">Transmisión:</label>
+                                      <select name="Transmisión" id="Transmisión" class="select2">
+                                          {% for option in dropdown_options['Transmisión'] %}
+                                              <option value="{{ option }}"
+                                                  {% if form_data and form_data['Transmisión'] == option %}selected{% endif %}>
+                                                  {{ option }}
+                                              </option>
+                                          {% endfor %}
+                                      </select>
+                                  </div>
+                                  <div class="field">
+                                      <label for="Dirección">Dirección:</label>
+                                      <select name="Dirección" id="Dirección" class="select2">
+                                          {% for option in dropdown_options['Dirección'] %}
+                                              <option value="{{ option }}"
+                                                  {% if form_data and form_data['Dirección'] == option %}selected{% endif %}>
+                                                  {{ option }}
+                                              </option>
+                                          {% endfor %}
+                                      </select>
+                                  </div>
+                                  <div class="field">
+                                      <label for="Motor">Motor:</label>
+                                      <input type="number" step="any" name="Motor" id="Motor" value="{{ form_data['Motor'] if form_data and form_data['Motor'] is defined else '' }}">
+                                  </div>
+                                  <div class="field">
+                                      <label for="Tracción">Tracción:</label>
+                                      <select name="Tracción" id="Tracción" class="select2">
+                                          {% for option in dropdown_options['Tracción'] %}
+                                              <option value="{{ option }}"
+                                                  {% if form_data and form_data['Tracción'] == option %}selected{% endif %}>
+                                                  {{ option }}
+                                              </option>
+                                          {% endfor %}
+                                      </select>
+                                  </div>
+                                  <div class="field">
+                                      <label for="Color">Color:</label>
+                                      <select name="Color" id="Color" class="select2">
+                                          {% for option in dropdown_options['Color'] %}
+                                              <option value="{{ option }}"
+                                                  {% if form_data and form_data['Color'] == option %}selected{% endif %}>
+                                                  {{ option }}
+                                              </option>
+                                          {% endfor %}
+                                      </select>
+                                  </div>
+                                  <div class="field">
+                                      <label for="Combustible">Combustible:</label>
+                                      <select name="Combustible" id="Combustible" class="select2">
+                                          {% for option in dropdown_options['Combustible'] %}
+                                              <option value="{{ option }}"
+                                                  {% if form_data and form_data['Combustible'] == option %}selected{% endif %}>
+                                                  {{ option }}
+                                              </option>
+                                          {% endfor %}
+                                      </select>
+                                  </div>
+                              </div>
+                          </div>
+                          <button type="submit">Predecir Precio</button>
+                     </form>
+                 </div>
+             </div>
+        <div id="result-container">
+            {% if prediction is not none %}
+                <p>Precio Predicho: {{ prediction }}</p>
+                <table id="predicted-auto-table">
+                    <thead>
+                        <tr>
+                            <th>Campo</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, value in form_data.items() %}
+                            <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Ingrese los datos y presione "Predecir Precio"</p>
+            {% endif %}
+        </div>
+    </div>
+    <br>
+    <br>
+    <br>
+    <div id="footer">
+         <p>&copy; 2025 Predicción de Precio de Carros</p>
+    </div>
+</body>
+</html>
+
+    <script>
+        $(document).ready(function(){
+            // Inicializar Select2 para todos los selects con la clase "select2"
+            $('.select2').select2({
+                width: '200px',
+                placeholder: 'Seleccione una opción',
+                allowClear: true
+            });
+            
+            // Obtener el mapeo Marca -> Modelos (pasado desde el backend)
+            var marcaModeloMap = {{ marca_modelo_json|safe }};
+            
+            // Cuando se cambie el select de Marca, se actualiza el select de Modelo
+            $('#Marca').on('change', function(){
+                var marcaSeleccionada = $(this).val();
+                var modelos = marcaModeloMap[marcaSeleccionada] || [];
+                var modeloSelect = $('#Modelo');
+                modeloSelect.empty(); // Limpiar opciones actuales
+                
+                // Agregar cada modelo como opción
+                for(var i = 0; i < modelos.length; i++){
+                    modeloSelect.append(new Option(modelos[i], modelos[i]));
+                }
+                
+                // Actualizar Select2 en el select de Modelo
+                modeloSelect.trigger('change');
+            });
+            
+            // Si hay predicción, limpiar el formulario (después de un breve retardo para que se procese el envío)
+            {% if prediction is not none %}
+                setTimeout(function(){
+                    $('#auto-form')[0].reset();
+                    // También se reinician los select2
+                    $('.select2').val(null).trigger('change');
+                }, 500);
+            {% endif %}
+        });
+    </script>
+</body>
+</html>
