@@ -24,7 +24,7 @@ jobs:
           context: ./  # Usa la raíz del repo
           file: docker/Dockerfile.train
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/proyect-train_model:v2
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/proyect-train_model:v3
 
   build-and-push-api:
     runs-on: ubuntu-latest
@@ -45,7 +45,7 @@ jobs:
           context: ./  # Usa la raíz del repo
           file: docker/Dockerfile.api
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/proyect-web_api:v2
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/proyect-web_api:v3
 
   deploy-train-model:
     needs: build-and-push-api
@@ -60,11 +60,11 @@ jobs:
           script: |
             sudo docker stop train_model || true
             sudo docker rm train_model || true
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/proyect-train_model:v2
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/proyect-train_model:v3
             sudo docker run -d --name train_model -p 5000:5000 \
               -v /home/ec2-user/proyect/models:/app/models \
               -v /home/ec2-user/proyect/encoders:/app/encoders \
-              ${{ secrets.DOCKERHUB_USERNAME }}/proyect-train_model:v2
+              ${{ secrets.DOCKERHUB_USERNAME }}/proyect-train_model:v3
 
   deploy-web-app:
     needs: deploy-train-model
@@ -79,9 +79,9 @@ jobs:
           script: |
             sudo docker stop web_api || true
             sudo docker rm web_api || true
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/proyect-web_api:v2
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/proyect-web_api:v3
             sudo docker run -d --name web_api -p 5000:5000 \
               -e TRAINING_SERVER_IP="${{ secrets.TRAINING_SERVER_IP }}" \
               -v /home/ec2-user/proyect/models:/app/models \
               -v /home/ec2-user/proyect/encoders:/app/encoders \
-              ${{ secrets.DOCKERHUB_USERNAME }}/proyect-web_api:v2
+              ${{ secrets.DOCKERHUB_USERNAME }}/proyect-web_api:v3
