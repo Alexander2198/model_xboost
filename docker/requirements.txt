@@ -1,19 +1,8 @@
-# Librerías de procesamiento de datos
+flask
+requests
+joblib
 pandas
 numpy
-scikit-learn
-requests
-# Modelo de Machine Learning
 xgboost
-
-# Serialización del modelo y encoders
-joblib
-pickle5
-
-# API (Si usas Flask o FastAPI)
-flask  # Si usas Flask
-# fastapi  # Si usas FastAPI (descomenta si la usas)
-# uvicorn  # Si usas FastAPI, necesitas este servidor
-
-# Extra: Si usas Jupyter Notebooks para pruebas
-# jupyter
+scikit-learn
+gunicorn
