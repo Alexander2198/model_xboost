@@ -1,0 +1,87 @@
+name: Train and Deploy XGBoost Model
+
+on:
+  push:
+    branches:
+      - main  # Se ejecutará cada vez que hagas push en `main`
+
+jobs:
+  build-and-push-train:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build and push Training Model
+        uses: docker/build-push-action@v4
+        with:
+          context: ./  # Usa la raíz del repo
+          file: docker/Dockerfile.train
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/proyect-train_model:v2
+
+  build-and-push-api:
+    runs-on: ubuntu-latest
+    needs: build-and-push-train  # Espera a que termine el job anterior
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build and push Web API
+        uses: docker/build-push-action@v4
+        with:
+          context: ./  # Usa la raíz del repo
+          file: docker/Dockerfile.api
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/proyect-web_api:v2
+
+  deploy-train-model:
+    needs: build-and-push-api
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Training Model on EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TRAINING_SERVER_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo docker stop train_model || true
+            sudo docker rm train_model || true
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/proyect-train_model:v2
+            sudo docker run -d --name train_model -p 5000:5000 \
+              -v /home/ec2-user/proyect/models:/app/models \
+              -v /home/ec2-user/proyect/encoders:/app/encoders \
+              ${{ secrets.DOCKERHUB_USERNAME }}/proyect-train_model:v2
+
+  deploy-web-app:
+    needs: deploy-train-model
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Web App on EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.WEB_SERVER_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo docker stop web_api || true
+            sudo docker rm web_api || true
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/proyect-web_api:v2
+            sudo docker run -d --name web_api -p 5000:5000 \
+              -e TRAINING_SERVER_IP="${{ secrets.TRAINING_SERVER_IP }}" \
+              -v /home/ec2-user/proyect/models:/app/models \
+              -v /home/ec2-user/proyect/encoders:/app/encoders \
+              ${{ secrets.DOCKERHUB_USERNAME }}/proyect-web_api:v2
