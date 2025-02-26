@@ -9,7 +9,7 @@ import pickle
 app = Flask(__name__)
 
 # 🔥 **IP PÚBLICA de la EC2 de entrenamiento**
-TRAINING_SERVER_IP = "http://ec2-44-221-50-62.compute-1.amazonaws.com:5000"
+TRAINING_SERVER_IP = "http://54.204.86.64:5000"
 
 # 📌 Rutas de los archivos de modelo y encoders
 MODEL_PATH = "models/modelo_xgboost.pkl"
